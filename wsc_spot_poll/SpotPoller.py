@@ -5,28 +5,6 @@ import statistics
 
 from influxdb_client import InfluxDBClient
 
-# Configure basic logging
-logging.basicConfig()
-logger = logging.getLogger('spot_poll')
-
-# Acquire influx authentication details. 
-INFLUX_URL = os.environ.get(
-    "INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com"
-)
-INFLUX_ORG = os.environ.get("INFLUX_ORG", "BWSC")
-INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN", None)
-
-INFLUX_BUCKET = os.environ.get("INFLUX_BUCKET", "sample")
-
-QUERY_TIME = os.environ.get("QUERY_TIME", "-2d")
-
-
-if not INFLUX_TOKEN:
-    raise ValueError("No InfluxDB token set using INFLUX_TOKEN "
-                     "environment variable")
-
-
-
 
 class SpotPoller:
     debug = False
@@ -34,9 +12,10 @@ class SpotPoller:
 
     def __init__(self, debug=False):
         logging.debug("Initialising SpotPoller")
-        #FIXME: Pass in the influx details. 
-        self.influx = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG,
-                        debug=debug)
+        # FIXME: Pass in the influx details.
+        self.influx = InfluxDBClient(
+            url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG, debug=debug
+        )
 
     def poll(self):
         logging.debug("Polling")
@@ -70,20 +49,7 @@ class SpotPoller:
         lats = []
         longs = []
 
-
     def run(self):
         self.running = True
         while self.running:
             self.poll()
-
-print("Hello!")
-
-#if __name__ == "__main__":
-#    poller = SpotPoller(debug=True)
-#    poller.run(debug=True)
-
-def main():
-    print("Hello World!")
-
-if __name__ == "__main__":
-    main()
