@@ -3,30 +3,40 @@
 #  This template allows you to validate your python code.
 #  The workflow allows running tests and code linting on the default branch.
 
-image: python:3.9
+image: python:3.11.1
 
 pipelines:
   default:
     - parallel:
-#      - step:
-#          name: Test
-#          caches:
-#            - pip
-#          script:
-#            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-#            - pip install pytest
-#            - pytest -v tests/* --junitxml=test-reports/report.xml
+      - step:
+          name: Test
+          caches:
+            - pip
+          script:
+            - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            - pip install pytest
+            - pytest -v test --junitxml=test-reports/report.xml
+
       - step:
           name: Lint code
+          caches:
+            - pip
           script:
-            # Enforce style consistency across Python projects https://flake8.pycqa.org/en/latest/manpage.html
-            - pip install flake8
-            - flake8 . --extend-exclude=dist,build --show-source --statistics
+            - pip install pylint
+            - pylint
+
+      - step:
+          name: Check code formatting
+          caches:
+            - pip
+          script:
+            - pip install black
+            - black
 
       - step:
           name: Build and push
           script:
-            - export ROOT_NAME=wscearth
+            - export ROOT_NAME=wsc_spot_poll
             - export IMAGE_NAME=dcasnowdon/$ROOT_NAME:$BITBUCKET_BRANCH-$BITBUCKET_COMMIT
             - docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
             - docker build -t $IMAGE_NAME .
