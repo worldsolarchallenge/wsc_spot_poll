@@ -10,20 +10,33 @@ class SpotPoller:
     debug = False
     running = False
 
-    def __init__(self, debug=False):
+    influx_query_time = "-2d"
+
+    def __init__(
+        self,
+        debug=False,
+        influx_url=None,
+        influx_org=None,
+        influx_token=None,
+        influx_bucket=None,
+        spot_token=None,
+    ):
         logging.debug("Initialising SpotPoller")
         # FIXME: Pass in the influx details.
         self.influx = InfluxDBClient(
-            url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG, debug=debug
+            url=influx_url, token=influx_token, org=influx_org, debug=debug
         )
+
+        self.influx_bucket = influx_bucket
+        self.spot_token = spot_token
 
     def poll(self):
         logging.debug("Polling")
         query_api = self.influx.query_api()
 
         query = f"""
-            from(bucket: "{INFLUX_BUCKET}")
-                |> range(start: {QUERY_TIME})
+            from(bucket: "{self.influx_bucket}")
+                |> range(start: {self.influx_query_time})
                 |> filter(fn: (r) => r._measurement == "telemetry"
                                     and (r._field == "latitude"
                                     or r._field == "longitude"

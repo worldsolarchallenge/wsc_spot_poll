@@ -19,9 +19,7 @@ INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN", None)
 
 INFLUX_BUCKET = os.environ.get("INFLUX_BUCKET", "sample")
 
-QUERY_TIME = os.environ.get("QUERY_TIME", "-2d")
-
-spot_token = abcdefg
+spot_token = "abcdefg"
 
 if not INFLUX_TOKEN:
     raise ValueError("No InfluxDB token set using INFLUX_TOKEN " "environment variable")
