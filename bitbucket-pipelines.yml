@@ -23,7 +23,7 @@ pipelines:
             - pip
           script:
             - pip install pylint
-            - pylint
+            - pylint wsc_spot_poll test
 
       - step:
           name: Check code formatting
@@ -31,7 +31,7 @@ pipelines:
             - pip
           script:
             - pip install black
-            - black
+            - black --check wsc_spot_poll test
 
       - step:
           name: Build and push
