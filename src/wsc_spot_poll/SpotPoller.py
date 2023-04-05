@@ -1,9 +1,10 @@
+import dateutil
 import os
 import logging
 import pprint
-import yaml
-import statistics
+import requests
 import time
+import yaml
 
 from influxdb_client import InfluxDBClient
 
@@ -33,8 +34,7 @@ class SpotPoller:
         self.influx_bucket = influx_bucket
         self.spot_token = spot_token
 
-        with open(trackers_def, "r") as file:
-            self.trackers = yaml.safe_load(file)
+        self.trackers = yaml.safe_load(trackers_def)
 
         pprint.pprint(self.trackers)
 
@@ -42,48 +42,31 @@ class SpotPoller:
         logger.debug("Polling")
         # Poll all the sources
 
-        for tracker in self.trackers:
+        for name,tracker in self.trackers.items():
             time.sleep(5.0)
-            logger.debug("Polling " + tracker.name)
-            url = "https://api.findmespot.com/spot-main-web/consumer/rest-api/2.0/public/feed/%s/message.json" % (
-                tracker.feed_id
-            )
+            logger.debug("Polling " + name)
+            url = f"https://api.findmespot.com/spot-main-web/consumer/rest-api/2.0/public/feed/{tracker['feed_id']}/message.json" 
             logger.debug("Requesting URL " + url)
             r = requests.get(url)
             logger.debug("Requested")
 
-            json = r.json()
+            response = r.json()
             if (
-                "response" not in json
-                or "feedMessageResponse" not in json["response"]
-                or "messages" not in json["response"]["feedMessageResponse"]
+                "response" not in response
+                or "feedMessageResponse" not in response["response"]
+                or "messages" not in response["response"]["feedMessageResponse"]
             ):
-                logger.debug(json)
+                logger.debug(response)
                 return -1
 
-            for message in json["response"]["feedMessageResponse"]["messages"]["message"]:
-                try:
-                    p = SpotPoint.objects.get(spot_id=message["id"])
-                except:
-                    if message["messengerId"] != tracker.messenger_id:
-                        continue
-
-                    p = SpotPoint(
-                        spot_id=message["id"],
-                        latitude=message["latitude"],
-                        longitude=message["longitude"],
-                        sample_time=dateutil.parser.parse(message["dateTime"]),
-                        tracker=tracker,
-                        message=str(message),
-                    )
-                    p.save()
-                    new_point_callback(p)
-                    continue
-
-                #            print str(p) + " was already in the database"
-                #            print json
-
-                continue
+            for message in response["response"]["feedMessageResponse"]["messages"]["message"]:
+                logging.info(
+                    "Receive SPOT message: id=%s lat=%s long=%s sample_time=%s raw='%s'",
+                    message["id"],
+                    message["longitude"],
+                    dateutil.parser.parse(message["dateTime"]),
+                    str(message),
+                )
 
     def run(self):
         self.running = True

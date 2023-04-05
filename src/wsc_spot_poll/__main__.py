@@ -17,21 +17,15 @@ parser.add_argument(
     default=None,
     help="YAML file providing tracker information.",
 )
-
 parser.add_argument(
     "--influx_url", default=os.environ.get("INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com")
 )
-
 parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "BWSC"))
-
 parser.add_argument("--influx_token", default=os.environ.get("INFLUX_TOKEN", None))
-
 parser.add_argument("--influx_bucket", default=os.environ.get("INFLUX_BUCKET", None))
-
 parser.add_argument("--spot_token", default=os.environ.get("SPOT_TOKEN", None))
 
 args = parser.parse_args()
-print(args.accumulate(args.integers))
 
 
 # Acquire influx authentication details.
@@ -48,10 +42,11 @@ if not INFLUX_TOKEN:
 
 # Run the spot poller
 poller = SpotPoller.SpotPoller(
-    influx_url=INFLUX_URL,
-    influx_org=INFLUX_ORG,
-    influx_token=INFLUX_TOKEN,
-    influx_bucket=INFLUX_BUCKET,
-    spot_token=spot_token,
+    influx_url=args.influx_url,
+    influx_org=args.influx_org,
+    influx_token=args.influx_token,
+    influx_bucket=args.influx_bucket,
+    spot_token=args.spot_token,
+    trackers_def=args.trackers_def,
 )
 poller.run()
