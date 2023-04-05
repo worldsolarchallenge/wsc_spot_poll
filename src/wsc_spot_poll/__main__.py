@@ -1,3 +1,4 @@
+import argparse
 import logging
 import os
 
@@ -5,15 +6,36 @@ from . import SpotPoller
 
 logging.basicConfig(level=logging.DEBUG)
 
-logging.debug("Hello, World!")
-
 # Configure basic logging
-logger = logging.getLogger("spot_poll")
+logger = logging.getLogger(__name__)
+
+parser = argparse.ArgumentParser(description="Gather SPOT data into InfluxDB.")
+parser.add_argument(
+    "--trackers_def",
+    dest="trackers_def",
+    type=argparse.FileType("r", encoding="utf-8"),
+    default=None,
+    help="YAML file providing tracker information.",
+)
+
+parser.add_argument(
+    "--influx_url", default=os.environ.get("INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com")
+)
+
+parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "BWSC"))
+
+parser.add_argument("--influx_token", default=os.environ.get("INFLUX_TOKEN", None))
+
+parser.add_argument("--influx_bucket", default=os.environ.get("INFLUX_BUCKET", None))
+
+parser.add_argument("--spot_token", default=os.environ.get("SPOT_TOKEN", None))
+
+args = parser.parse_args()
+print(args.accumulate(args.integers))
+
 
 # Acquire influx authentication details.
-INFLUX_URL = os.environ.get(
-    "INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com"
-)
+INFLUX_URL = os.environ.get("INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com")
 INFLUX_ORG = os.environ.get("INFLUX_ORG", "BWSC")
 INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN", None)
 
