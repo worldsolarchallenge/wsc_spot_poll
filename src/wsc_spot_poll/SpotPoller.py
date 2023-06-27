@@ -36,16 +36,25 @@ class SpotPoller:
 
         self.trackers = yaml.safe_load(trackers_def)
 
+        self.feeds = {}
+        for tracker in self.trackers:
+            logger.debug(self.trackers[tracker])
+            feed = self.trackers[tracker]["feed_id"]
+            if feed not in self.feeds:
+                self.feeds[feed] = []
+            self.feeds[feed].append(tracker)
+
         pprint.pprint(self.trackers)
 
-    def poll(self):
-        logger.debug("Polling")
-        # Poll all the sources
+        pprint.pprint(self.feeds)
 
-        for name,tracker in self.trackers.items():
+    def poll(self):
+        # Poll the feeds and add the data to the DB.
+
+        for feed in self.feeds:
             time.sleep(5.0)
-            logger.debug("Polling " + name)
-            url = f"https://api.findmespot.com/spot-main-web/consumer/rest-api/2.0/public/feed/{tracker['feed_id']}/message.json" 
+            logger.debug("Polling %s", feed)
+            url = f"https://api.findmespot.com/spot-main-web/consumer/rest-api/2.0/public/feed/{feed}/message.json" 
             logger.debug("Requesting URL " + url)
             r = requests.get(url)
             logger.debug("Requested")
@@ -72,4 +81,4 @@ class SpotPoller:
         self.running = True
         while self.running:
             self.poll()
-            time.sleep(30.0)
+            time.sleep(2.5 * 60)
