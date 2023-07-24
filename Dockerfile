@@ -1,10 +1,27 @@
-FROM python:3.11.1-slim
+FROM almalinux:9 as build
+RUN yum install -y python3 python3-pip git && \
+    python3 -m pip install --no-cache-dir --upgrade build
 
-COPY requirements.txt /app/requirements.txt
-WORKDIR /app
+COPY . /build
+WORKDIR /build
 
-RUN pip install -r requirements.txt
+RUN python3 -m build
 
-COPY . /app
 
-CMD ["python","-m", "wsc_spot_poll"]
+FROM python:3.11.1-slim as run
+
+#ENV INFLUX_TOKEN
+#ENV INFLUX_ORG
+#ENV INFLUX_URL
+#ENV INFLUX_BUCKET
+
+WORKDIR /
+
+RUN pip3 install --no-cache-dir --upgrade pip
+
+COPY --from=build /build/dist /app
+
+RUN pip3 install --no-cache-dir --upgrade /app/*.whl && rm -r /app
+
+
+CMD ["python","-m", "wsc_spot_poll", "--trackers_def", "/config.yaml"]
