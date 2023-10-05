@@ -138,6 +138,8 @@ class SpotPoller:
                             "event": "BWSC2023",
                             "class": tracker["class"],
                             "team": tracker["team"],
+                            "car": tracker["car"],
+                            "shortname": tracker["shortname"],
                         },
                         "fields": {
                             "longitude": decimal.Decimal(message["longitude"]),
