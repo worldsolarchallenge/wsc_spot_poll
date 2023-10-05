@@ -1,8 +1,9 @@
+"""wsc_spot_poll main entry point"""
 import argparse
 import logging
 import os
 
-from . import SpotPoller
+from . import spot_poller
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -18,30 +19,20 @@ parser.add_argument(
     help="YAML file providing tracker information.",
 )
 parser.add_argument(
-    "--influx_url", default=os.environ.get("INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com")
+    "--influx_url",
+    default=os.environ.get(
+        "INFLUX_URL", "us-east-1-1.aws.cloud2.influxdata.com"
+    ),
 )
-parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "BWSC"))
+parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "Bridgestone World Solar Challenge"))
 parser.add_argument("--influx_token", default=os.environ.get("INFLUX_TOKEN", None))
 parser.add_argument("--influx_bucket", default=os.environ.get("INFLUX_BUCKET", None))
 parser.add_argument("--spot_token", default=os.environ.get("SPOT_TOKEN", None))
 
 args = parser.parse_args()
 
-
-# Acquire influx authentication details.
-INFLUX_URL = os.environ.get("INFLUX_URL", "https://eastus-1.azure.cloud2.influxdata.com")
-INFLUX_ORG = os.environ.get("INFLUX_ORG", "BWSC")
-INFLUX_TOKEN = os.environ.get("INFLUX_TOKEN", None)
-
-INFLUX_BUCKET = os.environ.get("INFLUX_BUCKET", "sample")
-
-spot_token = "abcdefg"
-
-if not INFLUX_TOKEN:
-    raise ValueError("No InfluxDB token set using INFLUX_TOKEN " "environment variable")
-
 # Run the spot poller
-poller = SpotPoller.SpotPoller(
+poller = spot_poller.SpotPoller(
     influx_url=args.influx_url,
     influx_org=args.influx_org,
     influx_token=args.influx_token,

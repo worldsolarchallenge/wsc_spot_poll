@@ -40,5 +40,11 @@ localtest: build/testenv
         	-m wsc_spot_poll \
         	--trackers_def config.yaml
 
+lint: build/testenv
+	source $</bin/activate && \
+		pip install pylint && \
+		pylint $$(git ls-files '*.py')
+
+
 clean:
 	rm -rf build
