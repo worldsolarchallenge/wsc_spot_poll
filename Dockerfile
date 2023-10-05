@@ -8,7 +8,7 @@ WORKDIR /build
 RUN python3 -m build
 
 
-FROM python:3.11.1-slim as run
+FROM python:3.11.6-slim as run
 
 #ENV INFLUX_TOKEN
 #ENV INFLUX_ORG
