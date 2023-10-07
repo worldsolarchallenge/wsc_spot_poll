@@ -5,7 +5,7 @@ import os
 
 from . import spot_poller
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 # Configure basic logging
 logger = logging.getLogger(__name__)
@@ -28,8 +28,13 @@ parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "Bridge
 parser.add_argument("--influx_token", default=os.environ.get("INFLUX_TOKEN", None))
 parser.add_argument("--influx_bucket", default=os.environ.get("INFLUX_BUCKET", None))
 parser.add_argument("--spot_token", default=os.environ.get("SPOT_TOKEN", None))
+parser.add_argument("--debug", action="store_true", default=False)
 
 args = parser.parse_args()
+
+if args.debug:
+    logging.getLogger().setLevel(logging.DEBUG)
+    logging.debug("Sending debug output")
 
 # Run the spot poller
 poller = spot_poller.SpotPoller(

@@ -10,6 +10,8 @@ RUN python3 -m build
 
 FROM python:3.11.6-slim as run
 
+ENV DEBUG 1
+
 #ENV INFLUX_TOKEN
 #ENV INFLUX_ORG
 #ENV INFLUX_URL
