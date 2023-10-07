@@ -14,7 +14,7 @@ from influxdb_client_3 import InfluxDBClient3
 logger = logging.getLogger(__name__)
 
 
-class SpotPoller:
+class SpotPoller: # pylint: disable=too-many-instance-attributes
     """Polls a set of SPOT trackers, then publishes to influxdb"""
 
     def __init__(
