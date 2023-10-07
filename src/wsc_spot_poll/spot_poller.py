@@ -26,27 +26,19 @@ class SpotPoller:
         spot_token=None,
         trackers_def=None,
         dry_run=False,
-    ): # pylint: disable=too-many-arguments
+    ):  # pylint: disable=too-many-arguments
         logger.debug("Initialising SpotPoller")
         # InfluxDB Client
         if not influx_token:
-            raise ValueError(
-                "No InfluxDB token set"
-            )
+            raise ValueError("No InfluxDB token set")
 
         if not influx_url:
-            raise ValueError(
-                "No InfluxDB host set"
-            )
+            raise ValueError("No InfluxDB host set")
 
         if not influx_org:
-            raise ValueError(
-                "No InfluxDB org set"
-            )
+            raise ValueError("No InfluxDB org set")
 
-        self.influx = InfluxDBClient3(
-            host=influx_url, token=influx_token, org=influx_org, database=influx_bucket
-        )
+        self.influx = InfluxDBClient3(host=influx_url, token=influx_token, org=influx_org, database=influx_bucket)
 
         self.influx_bucket = influx_bucket
 
@@ -59,7 +51,6 @@ class SpotPoller:
 
         # Load the config from the yaml
         config = yaml.safe_load(trackers_def)
-
 
         spot_config = config.get("spot", {})
         self.recently_added_max = spot_config.get("recently_added_max", 1000)
@@ -78,7 +69,7 @@ class SpotPoller:
         # Derive a dictionary of feeds from the trackers
         self.feeds = {}
         self.trackers = {}
-        for tracker_id,tracker in config["cars"].items():
+        for tracker_id, tracker in config["cars"].items():
             logger.debug(tracker_id)
 
             self.trackers[tracker_id] = tracker
@@ -89,8 +80,8 @@ class SpotPoller:
                 self.feeds[feed] = []
             self.feeds[feed].append(tracker_id)
 
-#        pprint.pprint(self.trackers)
-#        pprint.pprint(self.feeds)
+    #        pprint.pprint(self.trackers)
+    #        pprint.pprint(self.feeds)
 
     def poll(self):
         """Poll SPOT once"""
@@ -127,9 +118,7 @@ class SpotPoller:
 
             new_message_list = []
 
-            for message in response["response"]["feedMessageResponse"]["messages"][
-                "message"
-            ]:
+            for message in response["response"]["feedMessageResponse"]["messages"]["message"]:
                 # Check to see if we just added this.
                 if message["id"] in self.recently_added[feed]:
                     stats["duplicate_count"] += 1
@@ -165,15 +154,22 @@ class SpotPoller:
             recently_added_excess = len(self.recently_added[feed]) - self.recently_added_max
             if recently_added_excess > 0:
                 for _ in range(recently_added_excess):
-                    logger.debug("Expiring message from recently_added[%s]: %s", feed, str(next(iter(self.recently_added[feed]))))
+                    logger.debug(
+                        "Expiring message from recently_added[%s]: %s", feed, str(next(iter(self.recently_added[feed])))
+                    )
                     self.recently_added[feed].remove(next(iter(self.recently_added[feed])))
             logger.debug("Recently added now has %d entries", len(self.recently_added[feed]))
 
             if not stats["duplicate_count"]:
                 logger.warning("All messages in the recent update were new.")
 
-            logger.info("Polled feed %s and added %d messages, ignoring %d duplicates", feed, stats["new_message_count"], stats["duplicate_count"])
-            stats.update({"feed":feed})
+            logger.info(
+                "Polled feed %s and added %d messages, ignoring %d duplicates",
+                feed,
+                stats["new_message_count"],
+                stats["duplicate_count"],
+            )
+            stats.update({"feed": feed})
             logger.info(json.dumps(stats))
 
     def new_messages(self, messages, feed=None):
@@ -196,7 +192,7 @@ class SpotPoller:
                                 "longitude": decimal.Decimal(message["longitude"]),
                                 "latitude": decimal.Decimal(message["latitude"]),
                                 "altitude": decimal.Decimal(message["altitude"]),
-                                "tracker_battery": message["batteryState"]
+                                "tracker_battery": message["batteryState"],
                             },
                             "time": int(message["unixTime"] * 1000000000),
                         }
@@ -212,7 +208,7 @@ class SpotPoller:
     def run(self, dry_run=False):
         """Repeatedly poll for new messages."""
         if dry_run:
-            self.dry_run=True
+            self.dry_run = True
 
         while True:
             self.poll()

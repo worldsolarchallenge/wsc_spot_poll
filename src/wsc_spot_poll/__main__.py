@@ -20,9 +20,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--influx_url",
-    default=os.environ.get(
-        "INFLUX_URL", "us-east-1-1.aws.cloud2.influxdata.com"
-    ),
+    default=os.environ.get("INFLUX_URL", "us-east-1-1.aws.cloud2.influxdata.com"),
 )
 parser.add_argument("--influx_org", default=os.environ.get("INFLUX_ORG", "Bridgestone World Solar Challenge"))
 parser.add_argument("--influx_token", default=os.environ.get("INFLUX_TOKEN", None))
