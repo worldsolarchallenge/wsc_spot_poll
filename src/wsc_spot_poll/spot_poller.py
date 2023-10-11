@@ -1,5 +1,4 @@
 """SpotPoller module monitors a SPOT tracker feed"""
-import decimal
 import json
 import logging
 import pprint
@@ -9,8 +8,6 @@ import dateutil
 import requests
 import yaml
 
-from influxdb_client_3 import InfluxDBClient3
-
 logger = logging.getLogger(__name__)
 
 
@@ -19,69 +16,44 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
 
     def __init__(
         self,
-        influx_url=None,
-        influx_org=None,
-        influx_token=None,
-        influx_bucket=None,
-        spot_token=None,
-        trackers_def=None,
+        influx=None,
+        config=None,
         dry_run=False,
-    ):  # pylint: disable=too-many-arguments
-        logger.debug("Initialising SpotPoller")
-        # InfluxDB Client
-        if not influx_token:
-            raise ValueError("No InfluxDB token set")
-
-        if not influx_url:
-            raise ValueError("No InfluxDB host set")
-
-        if not influx_org:
-            raise ValueError("No InfluxDB org set")
-
-        self.influx = InfluxDBClient3(host=influx_url, token=influx_token, org=influx_org, database=influx_bucket)
-
-        self.influx_bucket = influx_bucket
-
-        self.spot_token = spot_token
-
+    ):
         self.dry_run = dry_run
+        self.influx = influx
 
         # Dict of recently added messages per feed to avoid repeatedly adding duplicates.
         self.recently_added = {}
 
-        # Load the config from the yaml
-        config = yaml.safe_load(trackers_def)
+        config_defaults = {
+            "measurement":"spot",
+            "global_tags":{},
+            "spot":{
+                "feeds":[],
+                "update_period": 150,
+                "recently_added_max": 1100
+            }
+        }
+        c = config_defaults.copy()
 
-        spot_config = config.get("spot", {})
-        self.recently_added_max = spot_config.get("recently_added_max", 1000)
+        # Load the config from the yaml
+        c.update(yaml.safe_load(config))
+        self.config = c
+        logging.debug(pprint.pformat(self.config))
+
+        self.recently_added_max = self.config["spot"]["recently_added_max"]
         logger.debug("recently_added_max: %d", self.recently_added_max)
 
         # From:
         # https://www.findmespot.com/en-us/support/spot-trace/get-help/general/spot-api-support
         # ```Please allow at least 2.5 minutes between calls of the same feed and if you are pulling
         # multiple feeds have your application sleep at least 2 seconds between feed requests.```
-        self.update_period = spot_config.get("update_period", 150)
+        self.update_period =self.config["spot"]["update_period"]
         logger.debug("update_period: %d", self.update_period)
 
-        global_tags = config.get("global_tags", {})
+        global_tags = c["global_tags"]
         logger.debug("global_tags: %s", global_tags)
-
-        # Derive a dictionary of feeds from the trackers
-        self.feeds = {}
-        self.trackers = {}
-        for tracker_id, tracker in config["cars"].items():
-            logger.debug(tracker_id)
-
-            self.trackers[tracker_id] = tracker
-            self.trackers[tracker_id]["tags"].update(global_tags)
-
-            feed = tracker["spot"]["feed_id"]
-            if feed not in self.feeds:
-                self.feeds[feed] = []
-            self.feeds[feed].append(tracker_id)
-
-    #        pprint.pprint(self.trackers)
-    #        pprint.pprint(self.feeds)
 
     def poll(self):
         """Poll SPOT once"""
@@ -89,7 +61,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
         # Poll the feeds and add the data to the DB.
 
         first_feed = True
-        for feed in self.feeds:
+        for feed in self.config["spot"]["feeds"]:
             if not first_feed:
                 logger.debug("Sleeping 2s between feeds")
                 time.sleep(2.0)
@@ -141,7 +113,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
                     float(message["latitude"]),
                     float(message["longitude"]),
                 )
-                logger.debug("Raw message: %s", str(message))
+                logger.debug("Raw message: %s", pprint.pformat(message))
 
                 # Add this message to our list to send.
                 stats["new_message_count"] += 1
@@ -178,30 +150,27 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
         points = []
 
         for message in messages:
-            logger.debug("New message: %s feed=%s", message, feed)
-            for tracker_id in self.feeds[feed]:
-                tracker = self.trackers[tracker_id]
+            logger.debug("New message for feed %s: feed=%s", feed, pprint.pformat(message))
+            tags = self.config["global_tags"]
+            tags["feed"] = feed
+            tags["messengerId"] = message["messengerId"]
 
-                if tracker["spot"]["messenger_id"] == message["messengerId"]:
-                    logger.debug("Adding message for tracker %s", tracker_id)
-                    points.append(
-                        {
-                            "measurement": "telemetry",
-                            "tags": tracker["tags"],
-                            "fields": {
-                                "longitude": decimal.Decimal(message["longitude"]),
-                                "latitude": decimal.Decimal(message["latitude"]),
-                                "altitude": decimal.Decimal(message["altitude"]),
-                                "tracker_battery": message["batteryState"],
-                            },
-                            "time": int(message["unixTime"] * 1000000000),
-                        }
-                    )
-                    logger.debug("Message timestamp is %d seconds in the past", time.time() - int(message["unixTime"]))
+            fields = message
+            del fields["messengerId"]
+            fields["altitude"] = float(fields["altitude"])
+            points.append(
+                {
+                    "measurement": self.config["measurement"],
+                    "tags": tags,
+                    "fields": fields,
+                    "time": int(message["unixTime"] * 1000000000),
+                }
+            )
+            logger.debug("Message timestamp is %d seconds in the past", time.time() - int(message["unixTime"]))
 
         if not self.dry_run:
             logger.debug("Writing to influx: %s", pprint.pformat(points))
-            self.influx.write(database=self.influx_bucket, record=points)
+            self.influx.write(record=points)
         else:
             logger.info("DRY RUN. Would write: %s", pprint.pformat(points))
 

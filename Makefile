@@ -38,7 +38,7 @@ localtest: build/testenv
 	    INFLUX_TOKEN=$$(cat wsc_bucket_token.key) \
     	python3 \
         	-m wsc_spot_poll \
-        	--trackers_def config.yaml \
+        	--config config-new.yaml \
 			$(if $(DEBUG),--debug)
 
 lint: build/testenv

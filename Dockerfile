@@ -24,4 +24,4 @@ COPY --from=build /build/dist /app
 RUN pip3 install --no-cache-dir --upgrade /app/*.whl && rm -r /app
 
 
-CMD ["python","-m", "wsc_spot_poll", "--trackers_def", "/config.yaml", "--debug"]
+CMD ["python","-m", "wsc_spot_poll", "--config", "/config.yaml", "--debug"]
