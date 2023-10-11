@@ -1,5 +1,4 @@
 """SpotPoller module monitors a SPOT tracker feed"""
-import decimal
 import json
 import logging
 import pprint
