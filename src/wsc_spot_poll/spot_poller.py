@@ -22,25 +22,10 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
     ):
         self.dry_run = dry_run
         self.influx = influx
+        self.config = config
 
         # Dict of recently added messages per feed to avoid repeatedly adding duplicates.
         self.recently_added = {}
-
-        config_defaults = {
-            "measurement":"spot",
-            "global_tags":{},
-            "spot":{
-                "feeds":[],
-                "update_period": 150,
-                "recently_added_max": 1100
-            }
-        }
-        c = config_defaults.copy()
-
-        # Load the config from the yaml
-        c.update(yaml.safe_load(config))
-        self.config = c
-        logging.debug(pprint.pformat(self.config))
 
         self.recently_added_max = self.config["spot"]["recently_added_max"]
         logger.debug("recently_added_max: %d", self.recently_added_max)
@@ -52,7 +37,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
         self.update_period =self.config["spot"]["update_period"]
         logger.debug("update_period: %d", self.update_period)
 
-        global_tags = c["global_tags"]
+        global_tags = self.config["influx"]["global_tags"]
         logger.debug("global_tags: %s", global_tags)
 
     def poll(self):
@@ -164,7 +149,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
             fields["polled_at"] = update_time
             points.append(
                 {
-                    "measurement": self.config["measurement"],
+                    "measurement": self.config["influx"]["measurement"],
                     "tags": tags,
                     "fields": fields,
                     "time": int(message["unixTime"] * 1000000000),

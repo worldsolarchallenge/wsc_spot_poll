@@ -28,10 +28,11 @@ publish: build
 	docker image tag $(DOCKER_NAME):$(DOCKER_TAG) $(DOCKER_REPO)/$(DOCKER_NAME):$(DOCKER_TAG)
 
 
-build/testenv:
-	mkdir build
+build/testenv: setup.cfg
+	mkdir -p build
 	python3 -m venv build/testenv
 	source build/testenv/bin/activate && pip install -e .
+	touch $@
 
 localtest: build/testenv
 	source $</bin/activate && \
