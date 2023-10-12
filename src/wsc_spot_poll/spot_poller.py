@@ -149,6 +149,9 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
 
         points = []
 
+        # Time that this update occurred
+        update_time = time.time()
+
         for message in messages:
             logger.debug("New message for feed %s: feed=%s", feed, pprint.pformat(message))
             tags = self.config["global_tags"]
@@ -158,6 +161,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
             fields = message
             del fields["messengerId"]
             fields["altitude"] = float(fields["altitude"])
+            fields["polled_at"] = update_time
             points.append(
                 {
                     "measurement": self.config["measurement"],
