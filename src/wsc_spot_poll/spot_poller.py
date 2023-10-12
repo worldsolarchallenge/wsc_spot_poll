@@ -158,7 +158,7 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
 
         if not self.dry_run:
             logger.debug("Writing to influx: %s", pprint.pformat(points))
-            self.influx.write(record=points)
+            self.influx.write(record=points, database=self.config["influx"]["bucket"])
         else:
             logger.info("DRY RUN. Would write: %s", pprint.pformat(points))
 
