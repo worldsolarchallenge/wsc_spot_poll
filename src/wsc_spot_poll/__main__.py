@@ -33,18 +33,14 @@ if args.debug:
 
 logger.debug("Reading config yaml")
 config_defaults = {
-    "influx":{
-        "measurement":"spot",
-        "bucket":"test",
-        "org":None,
-        "url":None,
-        "global_tags":{},
+    "influx": {
+        "measurement": "spot",
+        "bucket": "test",
+        "org": None,
+        "url": None,
+        "global_tags": {},
     },
-    "spot":{
-        "feeds":[],
-        "update_period": 150,
-        "recently_added_max": 1100
-    }
+    "spot": {"feeds": [], "update_period": 150, "recently_added_max": 1100},
 }
 
 # Load the config from the yaml
@@ -65,7 +61,11 @@ if not config["influx"]["org"]:
     raise ValueError("No InfluxDB org set")
 
 influx = InfluxDBClient3(
-    token=args.influx_token, host=config["influx"]["url"], org=config["influx"]["org"], database=config["influx"]["bucket"])
+    token=args.influx_token,
+    host=config["influx"]["url"],
+    org=config["influx"]["org"],
+    database=config["influx"]["bucket"],
+)
 
 # Run the spot poller
 poller = spot_poller.SpotPoller(

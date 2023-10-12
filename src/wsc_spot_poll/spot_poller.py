@@ -6,12 +6,11 @@ import time
 
 import dateutil
 import requests
-import yaml
 
 logger = logging.getLogger(__name__)
 
 
-class SpotPoller: # pylint: disable=too-many-instance-attributes
+class SpotPoller:  # pylint: disable=too-many-instance-attributes
     """Polls a set of SPOT trackers, then publishes to influxdb"""
 
     def __init__(
@@ -34,7 +33,7 @@ class SpotPoller: # pylint: disable=too-many-instance-attributes
         # https://www.findmespot.com/en-us/support/spot-trace/get-help/general/spot-api-support
         # ```Please allow at least 2.5 minutes between calls of the same feed and if you are pulling
         # multiple feeds have your application sleep at least 2 seconds between feed requests.```
-        self.update_period =self.config["spot"]["update_period"]
+        self.update_period = self.config["spot"]["update_period"]
         logger.debug("update_period: %d", self.update_period)
 
         global_tags = self.config["influx"]["global_tags"]
