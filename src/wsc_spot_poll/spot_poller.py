@@ -146,6 +146,20 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
             del fields["messengerId"]
             fields["altitude"] = float(fields["altitude"])
             fields["polled_at"] = update_time
+
+            # Make sure that lat, long, altitude are floats.
+            fields["latitude"] = float(fields["latitude"])
+            fields["longitude"] = float(fields["longitude"])
+            fields["altitude"] = float(fields["altitude"])
+
+            # POWER-OFF messages don't have a valid position
+            if message["messageType"] in ["POWER-OFF"]:
+                del fields["latitude"]
+                del fields["longitude"]
+                del fields["altitude"]
+
+
+            fields["polled_at"] = update_time
             points.append(
                 {
                     "measurement": self.config["influx"]["measurement"],
