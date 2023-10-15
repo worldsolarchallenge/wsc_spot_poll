@@ -138,7 +138,7 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
 
         for message in messages:
             logger.debug("New message for feed %s: feed=%s", feed, pprint.pformat(message))
-            tags = self.config["global_tags"]
+            tags = self.config["global_tags"].copy()
             tags["feed"] = feed
             tags["messengerId"] = message["messengerId"]
 
