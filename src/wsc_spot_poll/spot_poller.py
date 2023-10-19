@@ -61,7 +61,7 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
             stats["new_message_count"] = 0
 
             if feed not in self.recently_added:
-                self.recently_added[feed] = set()
+                self.recently_added[feed] = []
 
             response = r.json()
             if (
@@ -82,7 +82,7 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
                     continue
 
                 # Add the new message to the recently added and trim to a length limit
-                self.recently_added[feed].add(message["id"])
+                self.recently_added[feed].append(message["id"])
 
                 logging.debug(
                     "Receive SPOT message: id=%s lat=%s long=%s battery=%s sample_time=%s",
@@ -109,11 +109,11 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
             # Expire messages from the recently added set.
             recently_added_excess = len(self.recently_added[feed]) - self.recently_added_max
             if recently_added_excess > 0:
-                for _ in range(recently_added_excess):
-                    logger.debug(
-                        "Expiring message from recently_added[%s]: %s", feed, str(next(iter(self.recently_added[feed])))
+                logger.debug(
+                        "Expiring messages from recently_added[%s]: %s", feed, str(self.recently_added[feed][0:recently_added_excess])
                     )
-                    self.recently_added[feed].remove(next(iter(self.recently_added[feed])))
+
+                self.recently_added[feed] = self.recently_added[feed][recently_added_excess:]
             logger.debug("Recently added now has %d entries", len(self.recently_added[feed]))
 
             if not stats["duplicate_count"]:
