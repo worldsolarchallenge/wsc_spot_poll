@@ -110,8 +110,10 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
             recently_added_excess = len(self.recently_added[feed]) - self.recently_added_max
             if recently_added_excess > 0:
                 logger.debug(
-                        "Expiring messages from recently_added[%s]: %s", feed, str(self.recently_added[feed][0:recently_added_excess])
-                    )
+                    "Expiring messages from recently_added[%s]: %s",
+                    feed,
+                    str(self.recently_added[feed][0:recently_added_excess]),
+                )
 
                 self.recently_added[feed] = self.recently_added[feed][recently_added_excess:]
             logger.debug("Recently added now has %d entries", len(self.recently_added[feed]))
@@ -157,7 +159,6 @@ class SpotPoller:  # pylint: disable=too-many-instance-attributes
                 del fields["latitude"]
                 del fields["longitude"]
                 del fields["altitude"]
-
 
             fields["polled_at"] = update_time
             points.append(
